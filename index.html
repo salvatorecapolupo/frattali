@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Foresta di Felci Frattali</title>
+    <style>
+        body { margin: 0; background: #050a05; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        canvas { border: 1px solid #1a331a; box-shadow: 0 0 20px rgba(0,255,0,0.1); }
+    </style>
+</head>
+<body>
+
+<canvas id="fernCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('fernCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Setup dimensioni
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    /**
+     * Disegna una singola felce di Barnsley
+     * @param {number} startX - Posizione X base
+     * @param {number} scale - Fattore di scala
+     * @param {string} color - Colore della felce
+     */
+    function drawFern(startX, scale, color) {
+        let x = 0, y = 0;
+        ctx.fillStyle = color;
+
+        // Disegniamo 20.000 punti per ogni felce per renderla densa
+        for (let i = 0; i < 20000; i++) {
+            let nextX, nextY;
+            let r = Math.random();
+
+            // Matrici di trasformazione di Barnsley
+            if (r < 0.01) {
+                nextX = 0;
+                nextY = 0.16 * y;
+            } else if (r < 0.86) {
+                nextX = 0.85 * x + 0.04 * y;
+                nextY = -0.04 * x + 0.85 * y + 1.6;
+            } else if (r < 0.93) {
+                nextX = 0.2 * x - 0.26 * y;
+                nextY = 0.23 * x + 0.22 * y + 1.6;
+            } else {
+                nextX = -0.15 * x + 0.28 * y;
+                nextY = 0.26 * x + 0.24 * y + 0.44;
+            }
+
+            x = nextX;
+            y = nextY;
+
+            // Mapping delle coordinate matematiche sullo schermo
+            // La felce di Barnsley vive circa tra x:[-2.18, 2.65] e y:[0, 10]
+            let px = startX + x * scale;
+            let py = canvas.height - (y * scale);
+
+            ctx.fillRect(px, py, 0.7, 0.7);
+        }
+    }
+
+    function createForest() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Numero di felci nella foresta
+        const numFerns = 12;
+
+        for (let i = 0; i < numFerns; i++) {
+            const xPos = Math.random() * canvas.width;
+            const scale = (Math.random() * 40) + 30; // Grandezza variabile
+            const greenTone = Math.floor(Math.random() * 100) + 100;
+            const color = `rgba(50, ${greenTone}, 50, 0.6)`; // Trasparenza per sovrapposizione
+            
+            drawFern(xPos, scale, color);
+        }
+    }
+
+    createForest();
+
+    // Rigenera al click
+    window.addEventListener('click', createForest);
+</script>
+</body>
+</html>
