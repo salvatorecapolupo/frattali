@@ -2,86 +2,255 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Foresta di Felci Frattali</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foresta di Felci Frattali Animata</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
-        body { margin: 0; background: #050a05; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        canvas { border: 1px solid #1a331a; box-shadow: 0 0 20px rgba(0,255,0,0.1); }
+        body { 
+            margin: 0; 
+            background: #050a05; 
+            color: #d0e0d0; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+        }
+        canvas { 
+            display: block;
+            border-bottom: 2px solid #1a331a; 
+            box-shadow: 0 0 20px rgba(0,255,0,0.1); 
+        }
+        #explanation {
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+            background: #0a140a;
+            border-left: 1px solid #1a331a;
+            border-right: 1px solid #1a331a;
+        }
+        h1, h2 { color: #4caf50; }
+        .math-container {
+            background: #0f1f0f;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #2a4a2a;
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+            pointer-events: none; /* Lascia passare i click al canvas se necessario, ma qui usiamo un bottone */
+        }
+        button {
+            pointer-events: auto;
+            background: #1a331a;
+            color: #fff;
+            border: 1px solid #4caf50;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        button:hover { background: #2a552a; }
     </style>
 </head>
 <body>
 
+<div class="controls">
+    <button id="regenBtn">Rigenera Foresta</button>
+</div>
+
 <canvas id="fernCanvas"></canvas>
+
+<div id="explanation">
+    <h1>La Matematica della Felce di Barnsley</h1>
+    
+    <p>
+        La felce che vedi generarsi sopra è un esempio di <strong>Sistema di Funzioni Iterate (IFS)</strong>. 
+        L'immagine è costruita punto per punto giocando al "Chaos Game". Partendo da un punto casuale, 
+        applichiamo iterativamente una delle quattro trasformazioni affini, scelta in base a una specifica probabilità.
+    </p>
+
+    <h2>1. La Formula Generale</h2>
+    <p>
+        Ogni nuovo punto $(x_{n+1}, y_{n+1})$ viene calcolato a partire dal punto precedente $(x_n, y_n)$ 
+        utilizzando una matrice di trasformazione e un vettore di traslazione:
+    </p>
+
+    <div class="math-container">
+        $$ 
+        \begin{bmatrix} x_{n+1} \\ y_{n+1} \end{bmatrix} = 
+        \begin{bmatrix} a & b \\ c & d \end{bmatrix} 
+        \begin{bmatrix} x_n \\ y_n \end{bmatrix} + 
+        \begin{bmatrix} e \\ f \end{bmatrix}
+        $$
+    </div>
+
+    <p>
+        Dove i coefficienti $a, b, c, d, e, f$ dipendono dalla trasformazione scelta casualmente secondo questa tabella:
+    </p>
+
+    <div class="math-container">
+        $$
+        \begin{array}{c|c|c|c|c|c|c|l}
+        \text{Trasformazione} & \text{Probabilità} & a & b & c & d & e & f & \text{Parte della Felce} \\
+        \hline
+        f_1 & 1\% & 0 & 0 & 0 & 0.16 & 0 & 0 & \text{Gambo (Base)} \\
+        f_2 & 85\% & 0.85 & 0.04 & -0.04 & 0.85 & 0 & 1.6 & \text{Foglioline successive} \\
+        f_3 & 7\% & 0.20 & -0.26 & 0.23 & 0.22 & 0 & 1.6 & \text{Foglia sinistra} \\
+        f_4 & 7\% & -0.15 & 0.28 & 0.26 & 0.24 & 0 & 0.44 & \text{Foglia destra} \\
+        \end{array}
+        $$
+    </div>
+
+    <h2>2. Esempio Pratico di Calcolo</h2>
+    <p>
+        Immaginiamo di essere al punto $P_n = (0, 0)$ (l'origine) e che il generatore casuale scelga la trasformazione 
+        $f_2$ (che avviene l'85% delle volte). Calcoliamo il punto successivo:
+    </p>
+
+    <div class="math-container">
+        $$
+        \begin{align}
+        x_{n+1} &= (0.85 \cdot 0) + (0.04 \cdot 0) + 0 = 0 \\
+        y_{n+1} &= (-0.04 \cdot 0) + (0.85 \cdot 0) + 1.6 = 1.6
+        \end{align}
+        $$
+    </div>
+    <p>
+        Il nuovo punto sarà $(0, 1.6)$. Se al turno successivo venisse estratta la trasformazione $f_3$ (Foglia sinistra), useremmo $(0, 1.6)$ come input:
+    </p>
+    <div class="math-container">
+        $$
+        \begin{align}
+        x_{n+2} &= (0.20 \cdot 0) + (-0.26 \cdot 1.6) + 0 = -0.416 \\
+        y_{n+2} &= (0.23 \cdot 0) + (0.22 \cdot 1.6) + 1.6 = 1.952
+        \end{align}
+        $$
+    </div>
+    <p>
+        Ripetendo questo processo migliaia di volte, la struttura frattale emerge dal caos.
+    </p>
+</div>
 
 <script>
     const canvas = document.getElementById('fernCanvas');
     const ctx = canvas.getContext('2d');
+    const btn = document.getElementById('regenBtn');
 
-    // Setup dimensioni
+    // Configurazione Canvas
     canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.height = window.innerHeight * 0.8; // Lascia spazio per il testo
 
-    /**
-     * Disegna una singola felce di Barnsley
-     * @param {number} startX - Posizione X base
-     * @param {number} scale - Fattore di scala
-     * @param {string} color - Colore della felce
-     */
-    function drawFern(startX, scale, color) {
-        let x = 0, y = 0;
-        ctx.fillStyle = color;
+    // Stato dell'animazione
+    let animationId;
+    let activeFerns = [];
 
-        // Disegniamo 20.000 punti per ogni felce per renderla densa
-        for (let i = 0; i < 20000; i++) {
-            let nextX, nextY;
-            let r = Math.random();
-
-            // Matrici di trasformazione di Barnsley
-            if (r < 0.01) {
-                nextX = 0;
-                nextY = 0.16 * y;
-            } else if (r < 0.86) {
-                nextX = 0.85 * x + 0.04 * y;
-                nextY = -0.04 * x + 0.85 * y + 1.6;
-            } else if (r < 0.93) {
-                nextX = 0.2 * x - 0.26 * y;
-                nextY = 0.23 * x + 0.22 * y + 1.6;
-            } else {
-                nextX = -0.15 * x + 0.28 * y;
-                nextY = 0.26 * x + 0.24 * y + 0.44;
-            }
-
-            x = nextX;
-            y = nextY;
-
-            // Mapping delle coordinate matematiche sullo schermo
-            // La felce di Barnsley vive circa tra x:[-2.18, 2.65] e y:[0, 10]
-            let px = startX + x * scale;
-            let py = canvas.height - (y * scale);
-
-            ctx.fillRect(px, py, 0.7, 0.7);
-        }
-    }
-
-    function createForest() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Numero di felci nella foresta
-        const numFerns = 12;
-
-        for (let i = 0; i < numFerns; i++) {
-            const xPos = Math.random() * canvas.width;
-            const scale = (Math.random() * 40) + 30; // Grandezza variabile
-            const greenTone = Math.floor(Math.random() * 100) + 100;
-            const color = `rgba(50, ${greenTone}, 50, 0.6)`; // Trasparenza per sovrapposizione
+    class Fern {
+        constructor(startX) {
+            this.x = 0;
+            this.y = 0;
+            this.startX = startX;
+            // Scala randomizzata per varietà
+            this.scale = (Math.random() * 45) + 35; 
             
-            drawFern(xPos, scale, color);
+            // Colore randomizzato
+            const green = Math.floor(Math.random() * 100) + 120;
+            this.color = `rgba(50, ${green}, 80, 0.8)`;
+            
+            this.pointsDrawn = 0;
+            this.maxPoints = 25000; // Più dettagli
+        }
+
+        // Calcola e disegna un batch di punti (es. 100 alla volta per velocità)
+        drawBatch(ctx) {
+            if (this.pointsDrawn >= this.maxPoints) return false;
+
+            ctx.fillStyle = this.color;
+            
+            // Disegniamo 100 punti per frame per ogni felce
+            for (let i = 0; i < 150; i++) {
+                let nextX, nextY;
+                let r = Math.random();
+
+                if (r < 0.01) {
+                    nextX = 0;
+                    nextY = 0.16 * this.y;
+                } else if (r < 0.86) {
+                    nextX = 0.85 * this.x + 0.04 * this.y;
+                    nextY = -0.04 * this.x + 0.85 * this.y + 1.6;
+                } else if (r < 0.93) {
+                    nextX = 0.2 * this.x - 0.26 * this.y;
+                    nextY = 0.23 * this.x + 0.22 * this.y + 1.6;
+                } else {
+                    nextX = -0.15 * this.x + 0.28 * this.y;
+                    nextY = 0.26 * this.x + 0.24 * this.y + 0.44;
+                }
+
+                this.x = nextX;
+                this.y = nextY;
+
+                // Disegna
+                let px = this.startX + this.x * this.scale;
+                let py = canvas.height - (this.y * this.scale) - 20; // -20 padding dal fondo
+
+                // Usiamo fillRect molto piccoli per alta definizione
+                ctx.fillRect(px, py, 0.8, 0.8);
+            }
+            
+            this.pointsDrawn += 150;
+            return true;
         }
     }
 
-    createForest();
+    function startForest() {
+        // Stop precedente animazione se attiva
+        if (animationId) cancelAnimationFrame(animationId);
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        activeFerns = [];
 
-    // Rigenera al click
-    window.addEventListener('click', createForest);
+        // Creiamo 8-12 felci
+        const numFerns = Math.floor(Math.random() * 4) + 8;
+        
+        for (let i = 0; i < numFerns; i++) {
+            // Distribuzione x casuale ma con margine
+            const xPos = (Math.random() * (canvas.width - 100)) + 50;
+            activeFerns.push(new Fern(xPos));
+        }
+
+        animate();
+    }
+
+    function animate() {
+        let stillDrawing = false;
+        
+        // Aggiorna ogni felce attiva
+        activeFerns.forEach(fern => {
+            const isActive = fern.drawBatch(ctx);
+            if (isActive) stillDrawing = true;
+        });
+
+        if (stillDrawing) {
+            animationId = requestAnimationFrame(animate);
+        }
+    }
+
+    // Event Listeners
+    btn.addEventListener('click', startForest);
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight * 0.8;
+        startForest();
+    });
+
+    // Avvio iniziale
+    startForest();
+
 </script>
 </body>
 </html>
